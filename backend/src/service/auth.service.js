@@ -2,7 +2,7 @@
 import User from "../model/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import { generateAccessToken, generateRefreshToken, hashToken, verifyRefreshToken } from "./token.service.js";
-
+import { sanitizeUser } from "../utils/common.js";
 const issueTokens = async (user) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
@@ -16,14 +16,7 @@ const issueTokens = async (user) => {
     return { accessToken, refreshToken };
 }
 
-const sanitizeUser = (user) => {
-    const userData = user.toJSON();
 
-    delete userData.password;
-    delete userData.refreshToken;
-
-    return userData;
-};
 
 const registerService = async ({ name, email, password }) => {
     const existingUser = await User.findOne({
@@ -36,20 +29,43 @@ const registerService = async ({ name, email, password }) => {
     return sanitizeUser(user);
 }
 
+
 const loginService = async ({ email, password }) => {
+
     const user = await User.unscoped().findOne({
         where: { email }
-    })
-    if (!user || !user.password || !user.comparePassword(password)) {
+    });
+
+    // Check user existence
+    if (!user || !user.password) {
         throw new ApiError(401, 'Invalid email or password');
     }
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, 'Invalid email or password');
+    }
+
+    // Check account status
     if (!user.isActive) {
         throw new ApiError(403, 'Your account has been deactivated');
     }
+
+    // Generate tokens
     const token = await issueTokens(user);
-    const sanitaze = sanitizeUser(user);
-    return { sanitaze, ...token }
-}
+
+    // Remove sensitive information
+    const sanitizedUser = sanitizeUser(user);
+
+    return {
+        user: sanitizedUser,
+        ...token
+    };
+};
+
+
 
 const refreshTokenService = async (refreshToken) => {
     if (!refreshToken) {
@@ -65,9 +81,10 @@ const refreshTokenService = async (refreshToken) => {
         throw new ApiError(401, 'Invalid refresh token');
     }
     const token = await issueTokens(user);
-    const sanitaze = sanitizeUser(user);
-    return { sanitaze, ...token }
+    const sanitazeUser = sanitizeUser(user);
+    return { user: sanitazeUser, ...token }
 }
+
 const logoutService = async (refreshToken) => {
     if (!refreshToken) return;
     try {

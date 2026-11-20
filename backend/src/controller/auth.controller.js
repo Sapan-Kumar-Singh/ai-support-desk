@@ -16,10 +16,9 @@ const refreshCookieOptions = () => {
 };
 
 const sendAuthResponse = (res, { user, accessToken, refreshToken }, statusCode, message) => {
-
-    res.cookie(REFRESH_COOKIE, refreshToken);
+    res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
     res.locals.userId = user.id;
-    sendSuccess(res, { statusCode, message, data: { user, accessToken } })
+    return sendSuccess(res, { statusCode, message, data: { user, accessToken } })
 }
 const registerController = asyncHandler(async (req, res) => {
     const user = await registerService(req.body);
@@ -31,18 +30,25 @@ const registerController = asyncHandler(async (req, res) => {
 })
 
 const loginController = asyncHandler(async (req, res) => {
-    const result = await loginService(req.body);
-    sendAuthResponse(res, result, 200, 'Login successful');
+    const { user, accessToken, refreshToken } = await loginService(req.body);
+    sendAuthResponse(res, { user, accessToken, refreshToken }, 200, 'Login successful');
 })
 
 const refreshTokenController = asyncHandler(async (req, res) => {
-    const result = await refreshTokenService(req.cookie[REFRESH_COOKIE]);
-    sendAuthResponse(res, result, 200, 'Token refreshed');
+    const { user, accessToken, refreshToken } = await refreshTokenService(req.cookie[REFRESH_COOKIE]);
+    sendAuthResponse(res, { user, accessToken, refreshToken }, 200, 'Token refreshed');
 })
+
 const logoutController = asyncHandler(async (req, res) => {
-    res.locals.userId = await logoutService(req.cookie[REFRESH_COOKIE]);
+    res.locals.userId = await logoutService(req.cookies[REFRESH_COOKIE]);
+
     const { maxAge, ...clearOptions } = refreshCookieOptions();
+
     res.clearCookie(REFRESH_COOKIE, clearOptions);
-    sendSuccess(res, { message: 'Logged out successfully' });
-})
+
+    return sendSuccess(res, {
+        message: 'Logged out successfully'
+    });
+});
+
 export { registerController, loginController, logoutController, refreshTokenController }
