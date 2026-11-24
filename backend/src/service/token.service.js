@@ -19,9 +19,10 @@ const verifyToken = (token, secret) => {
     }
 };
 
+const verifyAccessToken = (token) => verifyToken(token, process.env.JWT_ACCESS_SECRET);
 const verifyRefreshToken = (token) => verifyToken(token, process.env.JWT_REFRESH_SECRET);
 
 // Only a hash of the refresh token is stored in the database
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
-export { generateAccessToken, generateRefreshToken, hashToken, verifyRefreshToken }
+export { generateAccessToken, generateRefreshToken, hashToken, verifyAccessToken, verifyRefreshToken }
