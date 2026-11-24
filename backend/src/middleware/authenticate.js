@@ -20,7 +20,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, 'User not found or inactive');
     }
 
-    req.users = user;
+    req.user = user;
     next();
 });
 

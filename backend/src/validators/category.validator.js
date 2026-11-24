@@ -1,8 +1,8 @@
 import Joi from 'joi';
 
 const categorySchema = Joi.object({
-    name: Joi.string().trim().min(10).max(100).required(),
-    description: Joi.string().trim().min(50).required()
+    name: Joi.string().trim().min(2).max(100).required(),
+    description: Joi.string().trim().min(2).max(500).required()
 }).required().messages({
     'any.required': 'Request body is required',
     'object.base': 'Request body must be a valid JSON object',
