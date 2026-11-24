@@ -1,7 +1,11 @@
 
 import Joi from 'joi';
 
-const objectId = Joi.string().hex().length(24).messages({ 'string.length': '{{#label}} must be a valid id' });
+const objectId = Joi.string()
+    .guid({ version: ['uuidv4'] })
+    .messages({
+        'string.guid': '{{#label}} must be a valid UUID v4'
+    });
 const idParamSchema = Joi.object({
     id: objectId.required()
 })

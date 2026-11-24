@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-
+import ApiError from '../utils/ApiError.js';
 const generateAccessToken = (user) =>
     jwt.sign({ id: user.id, role: user.role }, process.env.JWT_ACCESS_SECRET, {
         expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',

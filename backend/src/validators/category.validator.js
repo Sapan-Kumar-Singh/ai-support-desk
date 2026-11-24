@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 const categorySchema = Joi.object({
     name: Joi.string().trim().min(2).max(100).required(),
-    description: Joi.string().trim().min(2).max(500).required()
+    description: Joi.string().trim().min(2).max(500).allow('', null)
 }).required().messages({
     'any.required': 'Request body is required',
     'object.base': 'Request body must be a valid JSON object',
@@ -16,6 +16,7 @@ const updateCategorySchema = Joi.object({
 
     description: Joi.string()
         .trim()
+        .min(2)
         .max(500)
         .allow('', null)
 }).min(1).required().messages({
